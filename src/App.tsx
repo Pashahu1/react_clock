@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
 import './App.scss';
 import { Clock } from './components/Clock';
+import React, { useEffect, useState } from 'react';
 
 function getRandomName(): string {
   const value = Date.now().toString().slice(-4);
@@ -11,70 +11,46 @@ function getRandomName(): string {
 export const App: React.FC = () => {
   const [hasClock, setHasClock] = useState<boolean>(true);
   const [clockName, setClockName] = useState<string>('Clock-0');
-  const [currentTime, setCurrentTime] = useState<string>(
-    new Date().toUTCString().slice(-12, -4),
-  );
 
   useEffect(() => {
-    const timeUpdaterId = setInterval(() => {
-      setCurrentTime(new Date().toUTCString().slice(-12, -4));
-      if (hasClock) {
-        // eslint-disable-next-line no-console
-        console.log(new Date().toUTCString().slice(-12, -4));
-      }
-    }, 1000);
-
     const timerId = window.setInterval(() => {
-      setClockName(prevName => {
-        const newName = getRandomName();
+      const newName = getRandomName();
 
-        if (hasClock) {
+      if (hasClock) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        setClockName(prev => {
           // eslint-disable-next-line no-console
-          console.warn(`Renamed from ${prevName} to ${newName}`);
-        }
+          console.warn(`Renamed from ${prev} to ${newName}`);
+        });
+      }
 
-        return newName;
-      });
+      setClockName(newName);
     }, 3300);
 
-    const timer = (event: MouseEvent) => {
-      if (!hasClock && event.type === 'click') {
-        setClockName(getRandomName());
-
-        return setHasClock(true);
-      }
-
+    const handleContextMenu = (event: MouseEvent) => {
       event.preventDefault();
-
-      return setHasClock(false);
+      setHasClock(false);
     };
 
-    document.addEventListener('contextmenu', timer);
+    const handleClick = () => {
+      setHasClock(true);
+    };
 
-    if (!hasClock) {
-      document.addEventListener('click', timer);
-    }
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('click', handleClick);
 
     return () => {
-      document.removeEventListener('contextmenu', timer);
-      document.removeEventListener('click', timer);
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('click', handleClick);
       clearInterval(timerId);
-      clearInterval(timeUpdaterId);
     };
   }, [hasClock]);
 
   return (
     <div className="App">
       <h1>React clock</h1>
-      {hasClock && (
-        <div className="Clock">
-          <strong className="Clock__name">{clockName}</strong>
-
-          {' time is '}
-
-          <Clock currentTime={currentTime} />
-        </div>
-      )}
+      {hasClock && <Clock clockName={clockName} />}
     </div>
   );
 };
